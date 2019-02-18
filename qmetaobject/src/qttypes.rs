@@ -544,3 +544,67 @@ impl QImage {
             { return self->pixelColor(x, y); })
     }
 }
+
+/// Wrapper around QRect
+#[repr(C)]
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
+pub struct QRect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
+
+impl QRect {
+    pub fn contains(&self, pos: QPoint) -> bool {
+        cpp!(unsafe [self as "const QRect*", pos as "QPoint"] -> bool as "bool" {
+            return self->contains(pos);
+        })
+    }
+    
+    pub fn top_left(&self) -> QPoint {
+        QPoint {
+            x: self.x,
+            y: self.y,
+        }
+    }
+}
+
+
+/// Wrapper around QPoint
+#[repr(C)]
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
+pub struct QPoint {
+    pub x: i32,
+    pub y: i32,
+}
+impl std::ops::Add for QPoint {
+    type Output = QPoint;
+    fn add(self, other: QPoint) -> QPoint {
+        QPoint {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+impl std::ops::AddAssign for QPoint {
+    fn add_assign(&mut self, other: QPoint) {
+        *self = QPoint {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        };
+    }
+}
+
+#[test]
+fn test_qpoint_qrect() {
+    let rect = QRect {
+        x: 200,
+        y: 150,
+        width: 60,
+        height: 75,
+    };
+    let pt = QPointF { x: 12, y: 5 };
+    assert!(!rect.contains(pt));
+    assert!(rect.contains(pt + rect.top_left()));
+}

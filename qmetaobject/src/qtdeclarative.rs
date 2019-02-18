@@ -515,3 +515,48 @@ struct Rust_QQmlExtensionPlugin : RustObject<QQmlExtensionPlugin> {
 };
 
 }}
+
+/// A QObject-like trait to inherit from QQuickPaintedItem.
+///
+/// Work in progress
+pub trait QQuickPaintedItem: QQuickItem {
+    #[doc(hidden)] // implementation detail for the QObject custom derive
+    fn get_object_description() -> &'static QObjectDescription
+    where
+        Self: Sized,
+    {
+        unsafe {
+            &*cpp!([]-> *const QObjectDescription as "RustObjectDescription const*" {
+            return rustObjectDescription<Rust_QQuickPaintedItem>();
+        } )
+        }
+    }
+    fn bounding_rect(&self) -> QRectF {
+        let obj = self.get_cpp_object();
+        cpp!(unsafe [obj as "QQuickPaintedItem*"] -> QRectF as "QRectF" { return obj->boundingRect(); })
+    }
+    fn update(&mut self, rect: Option<QRect>) {
+        let obj = self.get_cpp_object();
+        match rect {
+            Some(r) => cpp!(unsafe [obj as "QQuickPaintedItem*", r as "QRect"] { obj->update(r); }),
+            None => cpp!(unsafe [obj as "QQuickPaintedItem*"] { obj->update(); })
+        }
+    }
+    fn paint(&self, painter: &mut QPainter);
+}
+
+cpp! {{
+#include <qmetaobject_rust.hpp>
+#include <QtQuick/QQuickPaintedItem>
+struct Rust_QQuickPaintedItem : RustObject<QQuickPaintedItem> {
+    void paint(QPainter* painter) override
+    {
+        rust!(Rust_QQuickPaintedItem_paint[rust_object : QObjectPinned<QQuickPaintedItem> as "TraitObject",
+                                           painter : &mut QPainter as "QPainter*"]
+        {
+            rust_object.borrow_mut().paint(painter);
+        });
+    }
+};
+
+}} // END cpp!

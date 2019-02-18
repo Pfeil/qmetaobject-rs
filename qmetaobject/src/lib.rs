@@ -769,6 +769,8 @@ pub mod listmodel;
 pub use listmodel::*;
 pub mod qtdeclarative;
 pub use qtdeclarative::*;
+pub mod qpainter;
+pub use qpainter::*;
 pub mod qmetatype;
 pub use qmetatype::*;
 #[macro_use]
